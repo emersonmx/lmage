@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use tracing::info;
 use winit::event_loop::{self, ActiveEventLoop, ControlFlow, EventLoop};
-use winit::window::{Window, WindowId};
+use winit::window::{Window, WindowAttributes, WindowId};
 use winit::{application::ApplicationHandler, event::WindowEvent};
 
 #[derive(Default)]
@@ -13,7 +13,7 @@ struct App {
 impl ApplicationHandler for App {
     fn resumed(&mut self, event_loop: &event_loop::ActiveEventLoop) {
         let window = event_loop
-            .create_window(Window::default_attributes())
+            .create_window(WindowAttributes::default().with_title("Let's Make A Game Engine!"))
             .unwrap();
 
         self.windows.insert(window.id(), window);
