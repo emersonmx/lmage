@@ -1,13 +1,11 @@
-use std::collections::HashMap;
-
 use tracing::info;
 use winit::event_loop::{self, ActiveEventLoop, ControlFlow, EventLoop};
-use winit::window::{Window, WindowAttributes, WindowId};
+use winit::window::{Window, WindowAttributes};
 use winit::{application::ApplicationHandler, event::WindowEvent};
 
 #[derive(Default)]
 struct App {
-    windows: HashMap<WindowId, Window>,
+    window: Option<Window>,
 }
 
 impl ApplicationHandler for App {
@@ -16,7 +14,7 @@ impl ApplicationHandler for App {
             .create_window(WindowAttributes::default().with_title("Let's Make A Game Engine!"))
             .unwrap();
 
-        self.windows.insert(window.id(), window);
+        self.window = Some(window);
     }
 
     fn window_event(
@@ -25,10 +23,13 @@ impl ApplicationHandler for App {
         window_id: winit::window::WindowId,
         event: WindowEvent,
     ) {
-        let _window = match self.windows.get_mut(&window_id) {
+        let window = match self.window.as_ref() {
             Some(window) => window,
             None => return,
         };
+        if window_id != window.id() {
+            return;
+        }
 
         match event {
             WindowEvent::CloseRequested => {
@@ -41,8 +42,8 @@ impl ApplicationHandler for App {
     }
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        for window in self.windows.values() {
-            window.request_redraw()
+        if let Some(window) = self.window.as_ref() {
+            window.request_redraw();
         }
     }
 }
