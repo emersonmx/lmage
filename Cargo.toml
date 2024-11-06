@@ -9,6 +9,8 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 futures-executor = "0.3.31"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 winit = { version = "0.30.5", features = ["rwh_06"] }
 
 [profile.dev]

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use tracing::info;
 use winit::event_loop::{self, ActiveEventLoop, ControlFlow, EventLoop};
 use winit::window::{Window, WindowId};
 use winit::{application::ApplicationHandler, event::WindowEvent};
@@ -31,7 +32,7 @@ impl ApplicationHandler for App {
 
         match event {
             WindowEvent::CloseRequested => {
-                println!("The close button was pressed; stopping");
+                info!("The close button was pressed; stopping");
                 event_loop.exit();
             }
             WindowEvent::RedrawRequested => {}
@@ -47,6 +48,14 @@ impl ApplicationHandler for App {
 }
 
 pub async fn run() {
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "lmage=trace".into()),
+        )
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting tracing default failed");
+
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
 
