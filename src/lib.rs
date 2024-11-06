@@ -1,20 +1,25 @@
+mod state;
+
+use state::State;
 use tracing::info;
-use winit::event_loop::{self, ActiveEventLoop, ControlFlow, EventLoop};
-use winit::window::{Window, WindowAttributes};
+use winit::event_loop::{self, ControlFlow, EventLoop};
+use winit::window::WindowAttributes;
 use winit::{application::ApplicationHandler, event::WindowEvent};
 
 #[derive(Default)]
-struct App {
-    window: Option<Window>,
+struct App<'a> {
+    state: Option<State<'a>>,
 }
 
-impl ApplicationHandler for App {
+impl ApplicationHandler for App<'_> {
     fn resumed(&mut self, event_loop: &event_loop::ActiveEventLoop) {
         let window = event_loop
             .create_window(WindowAttributes::default().with_title("Let's Make A Game Engine!"))
             .unwrap();
 
-        self.window = Some(window);
+        let mut state = State::new(window);
+        state.resume();
+        self.state = Some(state);
     }
 
     fn window_event(
@@ -23,8 +28,8 @@ impl ApplicationHandler for App {
         window_id: winit::window::WindowId,
         event: WindowEvent,
     ) {
-        let window = match self.window.as_ref() {
-            Some(window) => window,
+        let window = match self.state.as_ref() {
+            Some(state) => &state.window(),
             None => return,
         };
         if window_id != window.id() {
@@ -36,19 +41,18 @@ impl ApplicationHandler for App {
                 info!("The close button was pressed; stopping");
                 event_loop.exit();
             }
-            WindowEvent::RedrawRequested => {}
+            WindowEvent::RedrawRequested => {
+                if let Some(state) = self.state.as_ref() {
+                    state.render();
+                    state.window().request_redraw();
+                }
+            }
             _ => {}
-        }
-    }
-
-    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
         }
     }
 }
 
-pub async fn run() {
+pub fn run() {
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
