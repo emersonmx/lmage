@@ -15,6 +15,7 @@ struct RenderContext<'a> {
     adapter: wgpu::Adapter,
     device: wgpu::Device,
     queue: wgpu::Queue,
+    config: wgpu::SurfaceConfiguration,
 }
 
 pub struct State<'a> {
@@ -51,6 +52,24 @@ impl<'a> State<'a> {
         ))
         .unwrap();
 
+        let surface_caps = surface.get_capabilities(&adapter);
+        let surface_format = surface_caps
+            .formats
+            .iter()
+            .find(|f| f.is_srgb())
+            .copied()
+            .unwrap_or(surface_caps.formats[0]);
+        let config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: surface_format,
+            width: size.width,
+            height: size.height,
+            present_mode: surface_caps.present_modes[0],
+            alpha_mode: surface_caps.alpha_modes[0],
+            view_formats: vec![],
+            desired_maximum_frame_latency: 2,
+        };
+
         Self {
             window_context: WindowContext { window, size },
             render_context: RenderContext {
@@ -59,6 +78,7 @@ impl<'a> State<'a> {
                 adapter,
                 device,
                 queue,
+                config,
             },
         }
     }
