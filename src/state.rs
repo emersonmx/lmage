@@ -1,9 +1,15 @@
 use std::sync::Arc;
 
-use winit::window::Window;
+use winit::{dpi::PhysicalSize, window::Window};
 
-pub struct State<'a> {
+#[derive(Debug)]
+struct WindowContext {
     window: Arc<Window>,
+    size: PhysicalSize<u32>,
+}
+
+#[derive(Debug)]
+struct RenderContext<'a> {
     instance: wgpu::Instance,
     surface: wgpu::Surface<'a>,
     adapter: wgpu::Adapter,
@@ -11,9 +17,16 @@ pub struct State<'a> {
     queue: wgpu::Queue,
 }
 
+pub struct State<'a> {
+    window_context: WindowContext,
+    render_context: RenderContext<'a>,
+}
+
 impl<'a> State<'a> {
     pub fn new(window: Window) -> State<'a> {
         let window = Arc::new(window);
+        let size = window.inner_size();
+
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::PRIMARY,
             ..Default::default()
@@ -39,17 +52,19 @@ impl<'a> State<'a> {
         .unwrap();
 
         Self {
-            window,
-            instance,
-            surface,
-            adapter,
-            device,
-            queue,
+            window_context: WindowContext { window, size },
+            render_context: RenderContext {
+                instance,
+                surface,
+                adapter,
+                device,
+                queue,
+            },
         }
     }
 
     pub fn window(&self) -> &Window {
-        &self.window
+        &self.window_context.window
     }
 
     pub fn resume(&mut self) {}
