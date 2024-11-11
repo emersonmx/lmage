@@ -1,32 +1,45 @@
+use std::sync::Arc;
+
 use tracing::{error, info, warn};
+use winit::dpi::PhysicalSize;
 use winit::event_loop;
-use winit::window::WindowAttributes;
+use winit::window::{Window, WindowAttributes};
 use winit::{application::ApplicationHandler, event::WindowEvent};
 
-use crate::state::State;
+use crate::renderer::Renderer;
 
 #[derive(Default)]
-pub struct App<'a> {
-    state: Option<State<'a>>,
+pub struct App {
+    window: Option<Arc<Window>>,
+    last_window_size: (u32, u32),
+    renderer: Option<Renderer<'static>>,
 }
 
-impl ApplicationHandler for App<'_> {
+impl ApplicationHandler for App {
     fn resumed(&mut self, event_loop: &event_loop::ActiveEventLoop) {
-        let window = event_loop
-            .create_window(
-                WindowAttributes::default()
-                    .with_title("Let's Make A Game Engine!")
-                    .with_visible(false),
-            )
-            .unwrap();
+        if let Ok(window) = event_loop.create_window(
+            WindowAttributes::default()
+                .with_title("Let's Make A Game Engine!")
+                .with_visible(false),
+        ) {
+            let first_window = self.window.is_none();
+            let window = Arc::new(window);
+            let (width, height) = window.inner_size().into();
+            self.window = Some(window.clone());
+            self.last_window_size = (width, height);
 
-        let mut state = State::new(window);
-        state.resume();
-        state.window().request_redraw();
-        state.resize(state.window_size());
-        let _ = state.render();
-        state.window().set_visible(true);
-        self.state = Some(state);
+            if first_window {
+                let renderer = futures_executor::block_on(async move {
+                    let mut renderer = Renderer::new(window.clone(), width, height).await;
+                    window.request_redraw();
+                    renderer.resize(width, height);
+                    let _ = renderer.render();
+                    window.set_visible(true);
+                    renderer
+                });
+                self.renderer = Some(renderer);
+            }
+        }
     }
 
     fn window_event(
@@ -35,17 +48,15 @@ impl ApplicationHandler for App<'_> {
         window_id: winit::window::WindowId,
         event: WindowEvent,
     ) {
-        let state = match self.state.as_mut() {
-            Some(state) => state,
+        let window = match self.window.as_ref() {
+            Some(window) => window,
             None => return,
         };
-        let window = &state.window();
+        let renderer = match self.renderer.as_mut() {
+            Some(renderer) => renderer,
+            None => return,
+        };
         if window_id != window.id() {
-            return;
-        }
-
-        // TODO: Create an input manager
-        if state.input(&event) {
             return;
         }
         match event {
@@ -53,15 +64,15 @@ impl ApplicationHandler for App<'_> {
                 info!("The close button was pressed; stopping");
                 event_loop.exit();
             }
-            WindowEvent::Resized(physical_size) => {
-                state.resize(physical_size);
+            WindowEvent::Resized(PhysicalSize { width, height }) => {
+                renderer.resize(width, height);
             }
             WindowEvent::RedrawRequested => {
-                state.update();
-                match state.render() {
+                match renderer.render() {
                     Ok(_) => {}
                     Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
-                        state.resize(state.window_size())
+                        let (width, height) = self.last_window_size;
+                        renderer.resize(width, height);
                     }
                     Err(wgpu::SurfaceError::OutOfMemory) => {
                         error!("OutOfMemory");
@@ -70,8 +81,8 @@ impl ApplicationHandler for App<'_> {
                     Err(wgpu::SurfaceError::Timeout) => {
                         warn!("Surface timeout");
                     }
-                };
-                state.window().request_redraw();
+                }
+                window.request_redraw();
             }
             _ => {}
         }
