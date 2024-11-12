@@ -125,6 +125,7 @@ impl ApplicationHandler<AppEvent> for App {
             }
             WindowEvent::Resized(PhysicalSize { width, height }) => {
                 renderer.resize(width, height);
+                self.last_window_size = (width, height);
             }
             WindowEvent::RedrawRequested => {
                 match renderer.render() {
