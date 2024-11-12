@@ -33,11 +33,11 @@ impl App {
 
 impl ApplicationHandler<AppEvent> for App {
     fn resumed(&mut self, event_loop: &event_loop::ActiveEventLoop) {
-        if let Ok(window) = event_loop.create_window(
-            WindowAttributes::default()
-                .with_title("Let's Make A Game Engine!")
-                .with_visible(false),
-        ) {
+        let attributes = WindowAttributes::default().with_title("Let's Make A Game Engine!");
+        #[cfg(not(target_arch = "wasm32"))]
+        let attributes = attributes.with_visible(false);
+
+        if let Ok(window) = event_loop.create_window(attributes) {
             let first_window = self.window.is_none();
             let window = Arc::new(window);
             let (width, height) = window.inner_size().into();
