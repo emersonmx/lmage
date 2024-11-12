@@ -7,5 +7,10 @@ run-windows:
 	cargo run --target x86_64-pc-windows-gnu
 
 .PHONY: run-web
-run-web:
-	@echo "todo"
+run-web: build-web
+	python -m http.server -d pkg/ -b 0.0.0.0
+
+.PHONY: build-web
+build-web:
+	wasm-pack build --target web
+	cp -f web/index.html pkg/index.html
