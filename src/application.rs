@@ -50,9 +50,30 @@ impl ApplicationHandler<AppEvent> for App {
 
             #[cfg(target_arch = "wasm32")]
             {
-                todo!("Make WASM setup!");
-            }
+                use winit::platform::web::WindowExtWebSys;
+                web_sys::window()
+                    .and_then(|win| win.document())
+                    .and_then(|doc| {
+                        let dst = doc.get_element_by_id("game-window")?;
+                        let canvas = web_sys::Element::from(window.canvas()?);
+                        dst.append_child(&canvas).ok()?;
+                        Some(())
+                    })
+                    .expect("Couldn't append canvas to document body.");
 
+                let event_loop_proxy = self.event_loop_proxy.clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    let mut renderer = Renderer::new(window.clone(), width, height).await;
+                    window.request_redraw();
+                    renderer.resize(width, height);
+                    let _ = renderer.render();
+                    window.set_visible(true);
+
+                    event_loop_proxy
+                        .send_event(AppEvent::ContextReadyEvent { renderer })
+                        .expect("Failed to send context ready event");
+                });
+            }
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let renderer = futures_executor::block_on(async move {
