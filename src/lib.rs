@@ -1,4 +1,6 @@
 #[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
+#[cfg(target_arch = "wasm32")]
 use winit::platform::web::EventLoopExtWebSys;
 
 use application::{App, AppEvent};
@@ -8,15 +10,7 @@ mod application;
 //mod state;
 mod renderer;
 
-#[cfg(target_arch = "wasm32")]
-mod wasm {
-    use wasm_bindgen::prelude::*;
-    #[wasm_bindgen(start)]
-    pub fn run() {
-        crate::run();
-    }
-}
-
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub fn run() {
     #[cfg(target_arch = "wasm32")]
     {
