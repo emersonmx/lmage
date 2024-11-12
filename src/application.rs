@@ -8,14 +8,30 @@ use winit::{application::ApplicationHandler, event::WindowEvent};
 
 use crate::renderer::Renderer;
 
-#[derive(Default)]
+#[derive(Debug)]
+pub enum AppEvent {
+    ContextReadyEvent { renderer: Renderer<'static> },
+}
+
 pub struct App {
     window: Option<Arc<Window>>,
     last_window_size: (u32, u32),
     renderer: Option<Renderer<'static>>,
+    event_loop_proxy: event_loop::EventLoopProxy<AppEvent>,
 }
 
-impl ApplicationHandler for App {
+impl App {
+    pub fn new(event_loop: &event_loop::EventLoop<AppEvent>) -> Self {
+        App {
+            window: None,
+            last_window_size: (0, 0),
+            renderer: None,
+            event_loop_proxy: event_loop.create_proxy(),
+        }
+    }
+}
+
+impl ApplicationHandler<AppEvent> for App {
     fn resumed(&mut self, event_loop: &event_loop::ActiveEventLoop) {
         if let Ok(window) = event_loop.create_window(
             WindowAttributes::default()
@@ -28,7 +44,17 @@ impl ApplicationHandler for App {
             self.window = Some(window.clone());
             self.last_window_size = (width, height);
 
-            if first_window {
+            if !first_window {
+                return;
+            }
+
+            #[cfg(target_arch = "wasm32")]
+            {
+                todo!("Make WASM setup!");
+            }
+
+            #[cfg(not(target_arch = "wasm32"))]
+            {
                 let renderer = futures_executor::block_on(async move {
                     let mut renderer = Renderer::new(window.clone(), width, height).await;
                     window.request_redraw();
@@ -37,6 +63,17 @@ impl ApplicationHandler for App {
                     window.set_visible(true);
                     renderer
                 });
+                self.event_loop_proxy
+                    .send_event(AppEvent::ContextReadyEvent { renderer })
+                    .expect("Failed to send context ready event");
+            }
+        }
+    }
+
+    fn user_event(&mut self, _event_loop: &event_loop::ActiveEventLoop, event: AppEvent) {
+        match event {
+            AppEvent::ContextReadyEvent { renderer } => {
+                info!("Received context ready event");
                 self.renderer = Some(renderer);
             }
         }
@@ -48,17 +85,18 @@ impl ApplicationHandler for App {
         window_id: winit::window::WindowId,
         event: WindowEvent,
     ) {
-        let window = match self.window.as_ref() {
-            Some(window) => window,
-            None => return,
-        };
         let renderer = match self.renderer.as_mut() {
             Some(renderer) => renderer,
+            None => return,
+        };
+        let window = match self.window.as_ref() {
+            Some(window) => window,
             None => return,
         };
         if window_id != window.id() {
             return;
         }
+
         match event {
             WindowEvent::CloseRequested => {
                 info!("The close button was pressed; stopping");

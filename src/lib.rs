@@ -2,7 +2,7 @@ mod application;
 //mod state;
 mod renderer;
 
-use application::App;
+use application::{App, AppEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 
 pub fn run() {
@@ -14,9 +14,9 @@ pub fn run() {
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting tracing default failed");
 
-    let event_loop = EventLoop::new().unwrap();
+    let event_loop = EventLoop::<AppEvent>::with_user_event().build().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
 
-    let mut app = App::default();
+    let mut app = App::new(&event_loop);
     event_loop.run_app(&mut app).unwrap();
 }
