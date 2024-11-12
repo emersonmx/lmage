@@ -61,13 +61,13 @@ impl ApplicationHandler<AppEvent> for App {
                     })
                     .expect("Couldn't append canvas to document body.");
 
+                let _ = window.request_inner_size(PhysicalSize::new(640, 480));
+                let (width, height) = window.inner_size().into();
+                self.last_window_size = (width, height);
+
                 let event_loop_proxy = self.event_loop_proxy.clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    let mut renderer = Renderer::new(window.clone(), width, height).await;
-                    window.request_redraw();
-                    renderer.resize(width, height);
-                    let _ = renderer.render();
-                    window.set_visible(true);
+                    let renderer = Renderer::new(window.clone(), width, height).await;
 
                     event_loop_proxy
                         .send_event(AppEvent::ContextReadyEvent { renderer })

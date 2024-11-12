@@ -14,6 +14,9 @@ pub struct Renderer<'window> {
 impl<'window> Renderer<'window> {
     pub async fn new(window: impl Into<SurfaceTarget<'window>>, width: u32, height: u32) -> Self {
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            #[cfg(target_arch = "wasm32")]
+            backends: wgpu::Backends::GL,
+            #[cfg(not(target_arch = "wasm32"))]
             backends: wgpu::Backends::PRIMARY,
             ..Default::default()
         });
@@ -31,6 +34,9 @@ impl<'window> Renderer<'window> {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     required_features: wgpu::Features::empty(),
+                    #[cfg(target_arch = "wasm32")]
+                    required_limits: wgpu::Limits::downlevel_webgl2_defaults(),
+                    #[cfg(not(target_arch = "wasm32"))]
                     required_limits: wgpu::Limits::default(),
                     label: None,
                     memory_hints: Default::default(),
@@ -57,8 +63,6 @@ impl<'window> Renderer<'window> {
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
         };
-
-        surface.configure(&device, &surface_config);
 
         Self {
             instance,

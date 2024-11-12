@@ -37,8 +37,6 @@ pub fn run() {
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        use tracing_subscriber::layer::SubscriberExt;
-
         let subscriber = tracing_subscriber::FmtSubscriber::builder()
             .with_env_filter(
                 tracing_subscriber::EnvFilter::try_from_default_env()
