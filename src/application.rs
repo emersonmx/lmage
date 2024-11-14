@@ -10,7 +10,7 @@ use crate::renderer::Renderer;
 
 #[derive(Debug)]
 pub enum AppEvent {
-    ContextReadyEvent { renderer: Renderer<'static> },
+    ReadyEvent { renderer: Renderer<'static> },
 }
 
 pub struct App {
@@ -70,8 +70,8 @@ impl ApplicationHandler<AppEvent> for App {
                     let renderer = Renderer::new(window.clone(), width, height).await;
 
                     event_loop_proxy
-                        .send_event(AppEvent::ContextReadyEvent { renderer })
-                        .expect("Failed to send context ready event");
+                        .send_event(AppEvent::ReadyEvent { renderer })
+                        .expect("Failed to send ready event");
                 });
             }
             #[cfg(not(target_arch = "wasm32"))]
@@ -85,16 +85,16 @@ impl ApplicationHandler<AppEvent> for App {
                     renderer
                 });
                 self.event_loop_proxy
-                    .send_event(AppEvent::ContextReadyEvent { renderer })
-                    .expect("Failed to send context ready event");
+                    .send_event(AppEvent::ReadyEvent { renderer })
+                    .expect("Failed to send ready event");
             }
         }
     }
 
     fn user_event(&mut self, _event_loop: &event_loop::ActiveEventLoop, event: AppEvent) {
         match event {
-            AppEvent::ContextReadyEvent { renderer } => {
-                info!("Received context ready event");
+            AppEvent::ReadyEvent { renderer } => {
+                info!("Received ready event");
                 self.renderer = Some(renderer);
             }
         }
