@@ -80,7 +80,7 @@ impl ApplicationHandler<AppEvent> for App {
                     let mut renderer = Renderer::new(window.clone(), width, height).await;
                     window.request_redraw();
                     renderer.resize(width, height);
-                    let _ = renderer.render();
+                    let _ = renderer.present();
                     window.set_visible(true);
                     renderer
                 });
@@ -128,7 +128,7 @@ impl ApplicationHandler<AppEvent> for App {
                 self.last_window_size = (width, height);
             }
             WindowEvent::RedrawRequested => {
-                match renderer.render() {
+                match renderer.present() {
                     Ok(_) => {}
                     Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
                         let (width, height) = self.last_window_size;

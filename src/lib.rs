@@ -7,7 +7,6 @@ use application::{App, AppEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 
 mod application;
-//mod state;
 mod renderer;
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
