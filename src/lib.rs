@@ -41,7 +41,7 @@ pub fn run() {
             .expect("setting tracing default failed");
     }
 
-    let event_loop = EventLoop::<AppEvent>::with_user_event().build().unwrap();
+    let event_loop: EventLoop<AppEvent> = EventLoop::with_user_event().build().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
 
     #[cfg(target_arch = "wasm32")]
