@@ -10,7 +10,7 @@ use crate::renderer::Renderer;
 
 #[derive(Debug)]
 pub enum AppEvent {
-    ReadyEvent { renderer: Renderer<'static> },
+    Ready { renderer: Renderer<'static> },
 }
 
 pub struct App {
@@ -70,7 +70,7 @@ impl ApplicationHandler<AppEvent> for App {
                     let renderer = Renderer::new(window.clone(), width, height).await;
 
                     event_loop_proxy
-                        .send_event(AppEvent::ReadyEvent { renderer })
+                        .send_event(AppEvent::Ready { renderer })
                         .expect("Failed to send ready event");
                 });
             }
@@ -85,7 +85,7 @@ impl ApplicationHandler<AppEvent> for App {
                     renderer
                 });
                 self.event_loop_proxy
-                    .send_event(AppEvent::ReadyEvent { renderer })
+                    .send_event(AppEvent::Ready { renderer })
                     .expect("Failed to send ready event");
             }
         }
@@ -93,7 +93,7 @@ impl ApplicationHandler<AppEvent> for App {
 
     fn user_event(&mut self, _event_loop: &event_loop::ActiveEventLoop, event: AppEvent) {
         match event {
-            AppEvent::ReadyEvent { renderer } => {
+            AppEvent::Ready { renderer } => {
                 info!("Received ready event");
                 self.renderer = Some(renderer);
             }
