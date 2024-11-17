@@ -1,3 +1,3 @@
 fn main() {
-    lmage::run();
+    lmage::start();
 }

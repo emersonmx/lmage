@@ -10,7 +10,7 @@ mod application;
 mod renderer;
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
-pub fn run() {
+pub fn start() {
     #[cfg(target_arch = "wasm32")]
     {
         use tracing_subscriber::fmt::format::Pretty;
