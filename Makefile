@@ -20,7 +20,7 @@ build-web:
 
 .PHONY: copy-web-assets
 copy-web-assets:
-	cp -f web_app/templates/index.html web_app/dist/index.html
+	cp -f web_app/src/index.html web_app/dist/index.html
 
 .PHONY: clean
 clean:
