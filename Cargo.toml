@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["lmage", "desktop_app"]
+members = ["lmage"]
 default-members = ["lmage"]
 
 [profile.dev]

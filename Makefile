@@ -8,21 +8,21 @@ run-windows:
 
 .PHONY: run-web
 run-web: build-web-dev copy-web-assets
-	python -m http.server -d web_app/dist/ -b 0.0.0.0
+	python -m http.server -d lmage/examples/web_app/dist/ -b 0.0.0.0
 
 .PHONY: build-web-dev
 build-web-dev:
-	wasm-pack build --target web --out-dir ../web_app/dist --dev lmage
+	wasm-pack build --target web --out-dir examples/web_app/dist --dev lmage
 
 .PHONY: build-web
 build-web:
-	wasm-pack build --target web --out-dir ../web_app/dist lmage
+	wasm-pack build --target web --out-dir examples/web_app/dist lmage
 
 .PHONY: copy-web-assets
 copy-web-assets:
-	cp -f web_app/src/index.html web_app/dist/index.html
+	cp -f lmage/examples/web_app/index.html lmage/examples/web_app/dist/index.html
 
 .PHONY: clean
 clean:
 	cargo clean
-	rm -rf web_app/dist/
+	rm -rf lmage/examples/web_app/dist/
