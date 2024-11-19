@@ -1,10 +1,10 @@
 .PHONY: run-linux
 run-linux:
-	cargo run --target x86_64-unknown-linux-gnu -p desktop_app
+	cargo run --target x86_64-unknown-linux-gnu --example desktop_app
 
 .PHONY: run-windows
 run-windows:
-	cargo run --target x86_64-pc-windows-gnu -p desktop_app
+	cargo run --target x86_64-pc-windows-gnu --example desktop_app
 
 .PHONY: run-web
 run-web: build-web-dev copy-web-assets
